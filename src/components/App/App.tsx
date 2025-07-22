@@ -1,58 +1,65 @@
-import css from "./App.module.css";
-import Cafeinfo from "../CafeInfo/CafeInfo";
 import { useState } from "react";
-import { VoteType, Votes } from "../../types/votes";
-import VoteOptions from "../VoteOptions/VoteOptions";
-import VoteStats from "../VoteStats/VoteStats";
-import Notification from "../Notification/Notification";
+import toast, { Toaster } from "react-hot-toast";
 
-export default function App() {
-  const [votes, setVotes] = useState<Votes>({
-    good: 0,
-    neutral: 0,
-    bad: 0,
-  });
+import SearchBar from "../SearchBar/SearchBar";
+import MovieGrid from "../MovieGrid/MovieGrid";
+import Loader from "../Loader/Loader";
+import ErrorMessage from "../ErrorMessage/ErrorMessage";
+import MovieModal from "../MovieModal/MovieModal";
 
-  const handleVote = (type: VoteType) => {
-    setVotes((prevVotes) => ({
-      ...prevVotes,
-      [type]: prevVotes[type] + 1,
-    }));
+import { fetchMovies } from "../../services/movieService";
+import { Movie } from "../../types/movie";
+
+import styles from "./App.module.css";
+
+const App = () => {
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+
+  const handleSearch = async (query: string) => {
+    setError(false);
+    setMovies([]);
+    setLoading(true);
+
+    try {
+      const results = await fetchMovies(query);
+      if (results.length === 0) {
+        toast.error("No movies found for your request.");
+      } else {
+        setMovies(results);
+      }
+    } catch (err) {
+      setError(true);
+      toast.error("There was an error, please try again...");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const resetVotes = () => {
-    setVotes({
-      good: 0,
-      neutral: 0,
-      bad: 0,
-    });
+  const handleSelectMovie = (movie: Movie) => {
+    setSelectedMovie(movie);
   };
 
-  // Обчислення загальної кількості голосів
-  const totalVotes = votes.good + votes.neutral + votes.bad;
-
-  // Обчислення відсотка позитивних голосів
-  const positiveRate = totalVotes
-    ? Math.round((votes.good / totalVotes) * 100)
-    : 0;
+  const handleCloseModal = () => {
+    setSelectedMovie(null);
+  };
 
   return (
-    <div className={css.app}>
-      <Cafeinfo />
-      <VoteOptions
-        onVote={handleVote}
-        onReset={resetVotes}
-        canReset={totalVotes > 0}
-      />
-      {totalVotes > 0 ? (
-        <VoteStats
-          votes={votes}
-          totalVotes={totalVotes}
-          positiveRate={positiveRate}
-        />
-      ) : (
-        <Notification />
+    <div className={styles.app}>
+      <SearchBar onSubmit={handleSearch} />
+      {loading && <Loader />}
+      {error && <ErrorMessage />}
+      {!loading && !error && movies.length > 0 && (
+        <MovieGrid movies={movies} onSelect={handleSelectMovie} />
       )}
+      {selectedMovie && (
+        <MovieModal movie={selectedMovie} onClose={handleCloseModal} />
+      )}
+      <Toaster />
     </div>
   );
-}
+};
+
+export default App;
