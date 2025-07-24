@@ -17,6 +17,7 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false); 
 
   const handleSearch = async (query: string) => {
     setError(false);
@@ -40,9 +41,11 @@ const App = () => {
 
   const handleSelectMovie = (movie: Movie) => {
     setSelectedMovie(movie);
+    setIsModalOpen(true); 
   };
 
   const handleCloseModal = () => {
+    setIsModalOpen(false); 
     setSelectedMovie(null);
   };
 
@@ -54,9 +57,10 @@ const App = () => {
       {!loading && !error && movies.length > 0 && (
         <MovieGrid movies={movies} onSelect={handleSelectMovie} />
       )}
-      {selectedMovie && (
-        <MovieModal movie={selectedMovie} onClose={handleCloseModal} />
-      )}
+      {isModalOpen &&
+        selectedMovie && ( 
+          <MovieModal movie={selectedMovie} onClose={handleCloseModal} />
+        )}
       <Toaster />
     </div>
   );
