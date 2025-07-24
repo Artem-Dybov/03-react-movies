@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import styles from "./MovieModal.module.css";
 import type { Movie } from "../../types/movie";
@@ -8,10 +8,14 @@ interface MovieModalProps {
   onClose: () => void;
 }
 
-const modalRoot = document.getElementById("modal-root") as HTMLElement;
-
 const MovieModal = ({ movie, onClose }: MovieModalProps) => {
+  const [modalRoot, setModalRoot] = useState<HTMLElement | null>(null);
+
   useEffect(() => {
+    
+    const root = document.getElementById("modal-root");
+    setModalRoot(root);
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
@@ -35,6 +39,8 @@ const MovieModal = ({ movie, onClose }: MovieModalProps) => {
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) onClose();
   };
+
+  if (!modalRoot) return null; 
 
   return ReactDOM.createPortal(
     <div
